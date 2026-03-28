@@ -3,6 +3,55 @@
   background: var(--color-bg);
 }
 
+/* === Drag & Drop Reorder === */
+.drag-handle {
+  cursor: grab;
+  font-size: 18px;
+  color: var(--color-gray-light);
+  user-select: none;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.drag-handle:hover {
+  color: var(--color-navy);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-handle-mobile {
+  cursor: grab;
+  font-size: 20px;
+  color: var(--color-gray-light);
+  user-select: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.drag-hint {
+  font-size: 12px;
+  color: var(--color-gray-light);
+  white-space: nowrap;
+}
+
+tr.dragging,
+.admin-item-card.dragging {
+  opacity: 0.4;
+  background: var(--color-bg);
+}
+
+tr.drag-over td {
+  border-top: 2px solid var(--color-teal) !important;
+}
+
+.admin-item-card.drag-over {
+  border-top: 2px solid var(--color-teal);
+}
+
 /* === Login === */
 .login-view {
   min-height: 100dvh;

@@ -19,13 +19,17 @@ export function renderItemsList(container, items, handlers) {
   container.innerHTML = `
     <div class="admin-header">
       <h2 class="admin-title">Items (${items.length})</h2>
-      <a href="#/items/new" class="btn btn-primary">+ Add Item</a>
+      <div class="btn-group">
+        <span class="drag-hint">Drag ≡ to reorder</span>
+        <a href="#/items/new" class="btn btn-primary">+ Add Item</a>
+      </div>
     </div>
 
     ${items.length === 0 ? '<div class="items-empty"><p>No items yet</p><p>Click "Add Item" to get started</p></div>' : `
       <table class="items-table">
         <thead>
           <tr>
+            <th style="width:36px"></th>
             <th>Photo</th>
             <th>Name</th>
             <th>Price</th>
@@ -34,9 +38,10 @@ export function renderItemsList(container, items, handlers) {
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
-          ${items.map(item => `
-            <tr data-id="${item.id}">
+        <tbody id="sortable-tbody">
+          ${items.map((item, idx) => `
+            <tr data-id="${item.id}" data-index="${idx}" draggable="true">
+              <td><span class="drag-handle" title="Drag to reorder">≡</span></td>
               <td>
                 ${item.photo_urls && item.photo_urls.length > 0
                   ? `<img src="${item.photo_urls[0]}" alt="" class="table-img">`
@@ -65,9 +70,10 @@ export function renderItemsList(container, items, handlers) {
       </table>
 
       <!-- Mobile cards -->
-      <div class="admin-item-cards">
-        ${items.map(item => `
-          <div class="admin-item-card" data-id="${item.id}">
+      <div class="admin-item-cards" id="sortable-cards">
+        ${items.map((item, idx) => `
+          <div class="admin-item-card" data-id="${item.id}" data-index="${idx}" draggable="true">
+            <span class="drag-handle-mobile" title="Drag to reorder">≡</span>
             ${item.photo_urls && item.photo_urls.length > 0
               ? `<img src="${item.photo_urls[0]}" alt="" class="admin-item-card-img">`
               : `<div class="admin-item-card-img"></div>`
@@ -103,6 +109,62 @@ export function renderItemsList(container, items, handlers) {
 
   container.querySelectorAll('.btn-delete').forEach(btn => {
     btn.addEventListener('click', () => handlers.onDelete(btn.dataset.id));
+  });
+
+  // Drag-and-drop reorder for table rows
+  setupDragReorderList(container.querySelector('#sortable-tbody'), 'tr', items, handlers.onReorder);
+  // Drag-and-drop reorder for mobile cards
+  setupDragReorderList(container.querySelector('#sortable-cards'), '.admin-item-card', items, handlers.onReorder);
+}
+
+function setupDragReorderList(listEl, childSelector, items, onReorder) {
+  if (!listEl || !onReorder) return;
+
+  let dragEl = null;
+
+  listEl.querySelectorAll(childSelector).forEach(el => {
+    el.addEventListener('dragstart', (e) => {
+      dragEl = el;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', el.dataset.index);
+    });
+
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      listEl.querySelectorAll('.drag-over').forEach(x => x.classList.remove('drag-over'));
+      dragEl = null;
+    });
+
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (el !== dragEl) {
+        el.classList.add('drag-over');
+      }
+    });
+
+    el.addEventListener('dragleave', () => {
+      el.classList.remove('drag-over');
+    });
+
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      if (!dragEl || dragEl === el) return;
+
+      const fromIndex = parseInt(dragEl.dataset.index);
+      const toIndex = parseInt(el.dataset.index);
+
+      // Reorder the items array
+      const reordered = [...items];
+      const [moved] = reordered.splice(fromIndex, 1);
+      reordered.splice(toIndex, 0, moved);
+
+      // Build new sort_order map: each item gets its position as sort_order
+      const updates = reordered.map((item, i) => ({ id: item.id, sort_order: i }));
+      onReorder(updates);
+    });
   });
 }
 

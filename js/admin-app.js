@@ -70,22 +70,7 @@ function handleRoute() {
   });
 
   if (hash === 'items') {
-    renderItemsList(main, items, {
-      onStatusChange: async (id, status) => {
-        await updateItem(id, { status });
-        await loadData();
-        renderItemsList(main, items, getItemListHandlers());
-      },
-      onDelete: async (id) => {
-        if (!confirm('Delete this item? This cannot be undone.')) return;
-        await deleteItem(id);
-        await loadData();
-        renderItemsList(main, items, getItemListHandlers());
-      },
-      onEdit: (id) => {
-        location.hash = `/items/${id}`;
-      }
-    });
+    renderItemsList(main, items, getItemListHandlers());
   } else if (hash === 'items/new') {
     renderItemForm(main, null, {
       categories: CATEGORIES,
@@ -159,7 +144,17 @@ function getItemListHandlers() {
       const main = document.getElementById('admin-main');
       renderItemsList(main, items, getItemListHandlers());
     },
-    onEdit: (id) => { location.hash = `/items/${id}`; }
+    onEdit: (id) => { location.hash = `/items/${id}`; },
+    onReorder: async (updates) => {
+      try {
+        await Promise.all(updates.map(u => updateItem(u.id, { sort_order: u.sort_order })));
+        await loadData();
+        const main = document.getElementById('admin-main');
+        renderItemsList(main, items, getItemListHandlers());
+      } catch (err) {
+        console.error('Reorder error:', err);
+      }
+    }
   };
 }
 
