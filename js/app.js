@@ -1,6 +1,6 @@
 import { store } from './store.js';
 import { fetchItems, fetchSettings, subscribeItems, subscribeSettings } from './api.js';
-import { renderFilterBar, renderItemGrid, renderItemModal, renderFlashBanner, renderHero, getEffectivePrice, getSavingsPercent } from './components.js';
+import { renderFilterBar, renderItemGrid, renderItemModal, renderFlashBanner, renderHero, renderCategorySidebar, getEffectivePrice, getSavingsPercent } from './components.js';
 import { initCountdown } from './countdown.js';
 
 // --- Filter Logic ---
@@ -26,24 +26,24 @@ function applyFilters() {
     });
   }
 
-  switch (f.sort) {
-    case 'price_asc':
-      items.sort((a, b) => getEffectivePrice(a, settings) - getEffectivePrice(b, settings));
-      break;
-    case 'price_desc':
-      items.sort((a, b) => getEffectivePrice(b, settings) - getEffectivePrice(a, settings));
-      break;
-    case 'newest':
-      items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      break;
-    case 'best_deal':
-      items.sort((a, b) => getSavingsPercent(b, settings) - getSavingsPercent(a, settings));
-      break;
-    default:
-      items.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-  }
+  // Sort: sold items always go to the end
+  const available = items.filter(i => i.status !== 'sold');
+  const sold = items.filter(i => i.status === 'sold');
 
-  store.set('filteredItems', items);
+  const sortFn = (a, b) => {
+    switch (f.sort) {
+      case 'price_asc': return getEffectivePrice(a, settings) - getEffectivePrice(b, settings);
+      case 'price_desc': return getEffectivePrice(b, settings) - getEffectivePrice(a, settings);
+      case 'newest': return new Date(b.created_at) - new Date(a.created_at);
+      case 'best_deal': return getSavingsPercent(b, settings) - getSavingsPercent(a, settings);
+      default: return (a.sort_order || 0) - (b.sort_order || 0);
+    }
+  };
+
+  available.sort(sortFn);
+  sold.sort(sortFn);
+
+  store.set('filteredItems', [...available, ...sold]);
 }
 
 // --- Routing ---
@@ -67,13 +67,20 @@ function render() {
   const filterBar = document.getElementById('filter-bar');
   const gridContainer = document.getElementById('grid-container');
   const flashBanner = document.getElementById('flash-banner');
+  const sidebar = document.getElementById('category-sidebar');
 
   renderFlashBanner(flashBanner);
-  renderFilterBar(filterBar, () => {
-    applyFilters();
-    renderItemGrid(gridContainer);
-  });
+  renderCategorySidebar(sidebar, onFilterChange);
+  renderFilterBar(filterBar, onFilterChange);
   renderItemGrid(gridContainer);
+}
+
+function onFilterChange() {
+  applyFilters();
+  const gridContainer = document.getElementById('grid-container');
+  const sidebar = document.getElementById('category-sidebar');
+  renderItemGrid(gridContainer);
+  renderCategorySidebar(sidebar, onFilterChange);
 }
 
 // --- Top Bar Countdown ---
@@ -90,14 +97,18 @@ function initTopBarCountdown() {
 
 function setupRealtime() {
   subscribeItems((payload) => {
-    const items = store.get('items');
+    let items = store.get('items');
     if (payload.eventType === 'INSERT') {
-      store.set('items', [...items, payload.new]);
+      // Deduplicate: don't add if already exists
+      if (!items.find(i => i.id === payload.new.id)) {
+        items = [...items, payload.new];
+      }
     } else if (payload.eventType === 'UPDATE') {
-      store.set('items', items.map(i => i.id === payload.new.id ? payload.new : i));
+      items = items.map(i => i.id === payload.new.id ? payload.new : i);
     } else if (payload.eventType === 'DELETE') {
-      store.set('items', items.filter(i => i.id !== payload.old.id));
+      items = items.filter(i => i.id !== payload.old.id);
     }
+    store.set('items', items);
     applyFilters();
     render();
   });
@@ -117,24 +128,7 @@ function setupRealtime() {
 
 async function init() {
   try {
-    // Load from sessionStorage for instant first paint
-    const cachedItems = sessionStorage.getItem('sg-sale-items');
-    const cachedSettings = sessionStorage.getItem('sg-sale-settings');
-
-    if (cachedSettings) {
-      store.set('settings', JSON.parse(cachedSettings));
-      renderHero(document.getElementById('hero'));
-      initTopBarCountdown();
-    }
-
-    if (cachedItems) {
-      store.set('items', JSON.parse(cachedItems));
-      store.set('loading', false);
-      applyFilters();
-      render();
-    }
-
-    // Fetch fresh data
+    // Fetch fresh data (skip cache to avoid stale duplicates)
     const [items, settings] = await Promise.all([fetchItems(), fetchSettings()]);
 
     store.set('settings', settings);

@@ -21,6 +21,7 @@
     <div class="topbar-inner">
       <a href="/" class="topbar-logo">Relocation Sale</a>
       <div class="topbar-right">
+        <span class="topbar-paynow">Payment via PayNow only</span>
         <span id="topbar-countdown" class="topbar-countdown"></span>
       </div>
     </div>
@@ -32,11 +33,49 @@
   <!-- Hero -->
   <section id="hero"></section>
 
+  <!-- Delivery Options Banner -->
+  <section class="delivery-banner">
+    <div class="container">
+      <h3 class="delivery-title">Collection & Delivery</h3>
+      <div class="delivery-options">
+        <div class="delivery-option">
+          <span class="delivery-icon">📍</span>
+          <div>
+            <strong>Pick up — Nim Road</strong>
+            <span class="delivery-desc">Free pickup at our address</span>
+          </div>
+        </div>
+        <div class="delivery-option">
+          <span class="delivery-icon">🏢</span>
+          <div>
+            <strong>Pick up — IFS</strong>
+            <span class="delivery-desc">Small items only</span>
+          </div>
+        </div>
+        <div class="delivery-option delivery-highlight">
+          <span class="delivery-icon">🚚</span>
+          <div>
+            <strong>Courier or Van — from S$5</strong>
+            <span class="delivery-desc">I'll organise everything for you!</span>
+          </div>
+        </div>
+      </div>
+      <p class="delivery-note">Contact us to organise an open house if you'd like to see everything in person</p>
+    </div>
+  </section>
+
   <!-- Main Content -->
   <main id="main-content" class="main">
     <div class="container">
-      <div id="filter-bar"></div>
-      <div id="grid-container"></div>
+      <div class="content-layout">
+        <!-- Left Sidebar: Categories -->
+        <aside id="category-sidebar" class="category-sidebar"></aside>
+        <!-- Right: Search + Grid -->
+        <div class="content-right">
+          <div id="filter-bar"></div>
+          <div id="grid-container"></div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -44,7 +83,7 @@
   <footer class="footer">
     <div class="container">
       <p class="footer-text">Singapore Relocation Sale</p>
-      <p class="footer-sub">All items sold as-is. Pickup only.</p>
+      <p class="footer-sub">All items sold as-is. Payment via PayNow only.</p>
     </div>
   </footer>
 
@@ -56,7 +95,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="js/app.js"></script>
   <script>
-    // Set WhatsApp FAB href after settings load
     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         try {

@@ -33,10 +33,13 @@ export function getWhatsAppUrl(item, settings) {
   const phone = settings.whatsapp_number || '';
   const effectivePrice = getEffectivePrice(item, settings);
   const itemUrl = `${window.location.origin}${window.location.pathname}#/item/${item.id}`;
-  let message = `Hi! I'm interested in: ${item.name}\nPrice: S$${effectivePrice}`;
-  if (item.open_to_offers) message += `\n(I see this is open to offers)`;
-  message += `\n\nFrom: ${settings.site_title || 'Relocation Sale'}`;
-  message += `\nItem: ${itemUrl}`;
+  const photoUrl = (item.photo_urls && item.photo_urls.length > 0) ? item.photo_urls[0] : '';
+  let message = `Hi! I'm interested in buying this item:\n\n`;
+  message += `*${item.name}*\n`;
+  message += `Price: S$${effectivePrice}\n`;
+  if (item.open_to_offers) message += `(Open to offers)\n`;
+  message += `\nItem link: ${itemUrl}`;
+  if (photoUrl) message += `\nPhoto: ${photoUrl}`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
@@ -44,20 +47,44 @@ function formatPrice(amount) {
   return `S$${Number(amount).toLocaleString()}`;
 }
 
-// --- Filter Bar ---
+// --- Category Sidebar ---
 
-export function renderFilterBar(containerEl, onFilterChange) {
+export function renderCategorySidebar(containerEl, onFilterChange) {
   const filters = store.get('filters');
   const items = store.get('items');
 
   const categoryCounts = {};
-  let totalAvailable = 0;
+  let total = items.length;
   for (const item of items) {
-    if (item.status === 'available') {
-      categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
-      totalAvailable++;
-    }
+    categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
   }
+
+  containerEl.innerHTML = `
+    <nav class="sidebar-categories">
+      <h3 class="sidebar-title">Categories</h3>
+      <ul class="cat-list">
+        <li><button class="cat-link ${filters.category === 'all' ? 'active' : ''}" data-cat="all">All Items <span class="cat-count">${total}</span></button></li>
+        ${CATEGORIES.map(cat => {
+          const count = categoryCounts[cat] || 0;
+          if (count === 0) return '';
+          return `<li><button class="cat-link ${filters.category === cat ? 'active' : ''}" data-cat="${cat}">${cat} <span class="cat-count">${count}</span></button></li>`;
+        }).join('')}
+      </ul>
+    </nav>
+  `;
+
+  containerEl.querySelectorAll('.cat-link').forEach(btn => {
+    btn.addEventListener('click', () => {
+      store.update('filters', f => ({ ...f, category: btn.dataset.cat }));
+      onFilterChange();
+    });
+  });
+}
+
+// --- Filter Bar (search + sort only, categories moved to sidebar) ---
+
+export function renderFilterBar(containerEl, onFilterChange) {
+  const filters = store.get('filters');
 
   containerEl.innerHTML = `
     <div class="filter-bar">
@@ -65,26 +92,33 @@ export function renderFilterBar(containerEl, onFilterChange) {
         <span class="search-icon">${ICONS.search}</span>
         <input type="search" class="search-input" placeholder="Search items..." value="${filters.search}" autocomplete="off">
       </div>
-      <div class="filter-row">
-        <div class="category-pills">
-          <button class="pill ${filters.category === 'all' ? 'active' : ''}" data-cat="all">All <span class="pill-count">${totalAvailable}</span></button>
-          ${CATEGORIES.map(cat => {
-            const count = categoryCounts[cat] || 0;
-            if (count === 0) return '';
-            return `<button class="pill ${filters.category === cat ? 'active' : ''}" data-cat="${cat}">${cat} <span class="pill-count">${count}</span></button>`;
-          }).join('')}
-        </div>
-        <div class="filter-controls">
-          <select class="sort-select" aria-label="Sort items">
-            ${SORT_OPTIONS.map(opt => `<option value="${opt.value}" ${filters.sort === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
-          </select>
-          <label class="toggle-label">
-            <input type="checkbox" class="toggle-available" ${filters.availableOnly ? 'checked' : ''}>
-            <span>Available only</span>
-          </label>
-        </div>
+      <div class="filter-controls">
+        <select class="sort-select" aria-label="Sort items">
+          ${SORT_OPTIONS.map(opt => `<option value="${opt.value}" ${filters.sort === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+        </select>
+        <label class="toggle-label">
+          <input type="checkbox" class="toggle-available" ${filters.availableOnly ? 'checked' : ''}>
+          <span>Available only</span>
+        </label>
       </div>
+      <!-- Mobile category pills -->
+      <div class="category-pills-mobile" id="mobile-cat-pills"></div>
     </div>
+  `;
+
+  // Mobile category pills
+  const items = store.get('items');
+  const categoryCounts = {};
+  for (const item of items) {
+    categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
+  }
+  const pillsEl = containerEl.querySelector('#mobile-cat-pills');
+  pillsEl.innerHTML = `
+    <button class="pill ${filters.category === 'all' ? 'active' : ''}" data-cat="all">All</button>
+    ${CATEGORIES.map(cat => {
+      if (!categoryCounts[cat]) return '';
+      return `<button class="pill ${filters.category === cat ? 'active' : ''}" data-cat="${cat}">${cat}</button>`;
+    }).join('')}
   `;
 
   // Event listeners
@@ -98,13 +132,6 @@ export function renderFilterBar(containerEl, onFilterChange) {
     }, 250);
   });
 
-  containerEl.querySelectorAll('.pill').forEach(btn => {
-    btn.addEventListener('click', () => {
-      store.update('filters', f => ({ ...f, category: btn.dataset.cat }));
-      onFilterChange();
-    });
-  });
-
   containerEl.querySelector('.sort-select').addEventListener('change', (e) => {
     store.update('filters', f => ({ ...f, sort: e.target.value }));
     onFilterChange();
@@ -113,6 +140,13 @@ export function renderFilterBar(containerEl, onFilterChange) {
   containerEl.querySelector('.toggle-available').addEventListener('change', (e) => {
     store.update('filters', f => ({ ...f, availableOnly: e.target.checked }));
     onFilterChange();
+  });
+
+  pillsEl.querySelectorAll('.pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      store.update('filters', f => ({ ...f, category: btn.dataset.cat }));
+      onFilterChange();
+    });
   });
 }
 
@@ -139,8 +173,8 @@ export function renderItemCard(item) {
         ? `<img src="${photoUrl}" alt="${item.name}" class="card-img" loading="lazy" decoding="async">`
         : `<div class="card-img-placeholder">No Photo</div>`
       }
-      ${isSold ? '<div class="card-ribbon sold">SOLD</div>' : ''}
-      ${isReserved ? '<div class="card-ribbon reserved">RESERVED</div>' : ''}
+      ${isSold ? '<div class="card-status-overlay sold-overlay"><span>SOLD</span></div>' : ''}
+      ${isReserved ? '<div class="card-status-overlay reserved-overlay"><span>RESERVED</span></div>' : ''}
       ${isFlash && !isSold ? `<div class="card-flash-badge">${ICONS.flash} -${settings.flash_sale_discount}%</div>` : ''}
       ${item.photo_urls && item.photo_urls.length > 1 ? `<div class="card-photo-count">${item.photo_urls.length} photos</div>` : ''}
     </div>
@@ -157,7 +191,6 @@ export function renderItemCard(item) {
       ${item.open_to_offers ? '<span class="badge-offer">Open to offers</span>' : ''}
       <div class="card-meta">
         <span class="badge-condition badge-${item.condition?.toLowerCase().replace(/\s/g, '-') || 'good'}">${item.condition || 'Good'}</span>
-        <span class="status-dot status-${item.status}"></span>
       </div>
     </div>
   `;
@@ -207,6 +240,10 @@ export function renderItemGrid(containerEl) {
 export function renderItemModal(item) {
   if (!item) return;
 
+  // Close any existing modal first
+  const existingModal = document.querySelector('.modal-overlay');
+  if (existingModal) existingModal.remove();
+
   const settings = store.get('settings');
   const effectivePrice = getEffectivePrice(item, settings);
   const savings = getSavingsPercent(item, settings);
@@ -223,6 +260,9 @@ export function renderItemModal(item) {
         <span class="card-category">${item.category}</span>
         <h2 class="modal-title">${item.name}</h2>
         ${item.brand ? `<p class="modal-brand">${item.brand}</p>` : ''}
+
+        ${isSold ? '<div class="modal-sold-badge">SOLD</div>' : ''}
+        ${item.status === 'reserved' ? '<div class="modal-reserved-badge">RESERVED</div>' : ''}
 
         <div class="modal-price">
           ${item.original_price ? `<span class="price-original">${formatPrice(item.original_price)}</span>` : ''}
@@ -246,7 +286,7 @@ export function renderItemModal(item) {
         ${!isSold ? `
           <a href="${getWhatsAppUrl(item, settings)}" target="_blank" rel="noopener" class="btn-whatsapp">
             ${ICONS.whatsapp}
-            <span>${item.status === 'reserved' ? 'Ask about availability' : "I'm Interested — Message on WhatsApp"}</span>
+            <span>${item.status === 'reserved' ? 'Ask about availability' : "I want to buy this — WhatsApp"}</span>
           </a>
         ` : '<div class="sold-message">This item has been sold</div>'}
       </div>
@@ -343,7 +383,6 @@ export function renderHero(containerEl) {
     </div>
   `;
 
-  // Init countdown
   if (settings.sale_end_date) {
     const countdownEl = containerEl.querySelector('#hero-countdown');
     initCountdown(settings.sale_end_date, countdownEl);

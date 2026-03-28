@@ -36,7 +36,7 @@ export const store = createStore({
   items: [],
   filteredItems: [],
   settings: {},
-  filters: { search: '', category: 'all', sort: 'sort_order', availableOnly: true },
+  filters: { search: '', category: 'all', sort: 'sort_order', availableOnly: false },
   loading: true,
   selectedItem: null,
   modalOpen: false,
