@@ -16,6 +16,108 @@ export function showAlert(container, message, type = 'success') {
 // --- Items List ---
 
 export function renderItemsList(container, items, handlers) {
+  // Group items by category
+  const grouped = new Map();
+  for (const item of items) {
+    if (!grouped.has(item.category)) grouped.set(item.category, []);
+    grouped.get(item.category).push(item);
+  }
+
+  let globalIndex = 0;
+
+  let tablesHtml = '';
+  let cardsHtml = '';
+
+  for (const [category, catItems] of grouped) {
+    // Desktop table per category
+    tablesHtml += `
+      <div class="admin-category-section">
+        <div class="admin-category-header">
+          <h3 class="admin-category-title">${category}</h3>
+          <span class="admin-category-count">${catItems.length}</span>
+        </div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width:36px"></th>
+              <th>Photo</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody class="sortable-tbody" data-category="${category}">
+            ${catItems.map(item => {
+              const idx = globalIndex++;
+              return `
+              <tr data-id="${item.id}" data-index="${idx}" draggable="true">
+                <td><span class="drag-handle" title="Drag to reorder">≡</span></td>
+                <td>
+                  ${item.photo_urls && item.photo_urls.length > 0
+                    ? `<img src="${item.photo_urls[0]}" alt="" class="table-img">`
+                    : `<div class="table-img" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--color-gray-light)">—</div>`
+                  }
+                </td>
+                <td><span class="table-name">${item.name}</span></td>
+                <td><strong>S$${Number(item.price).toLocaleString()}</strong></td>
+                <td>
+                  <select class="table-status-select" data-id="${item.id}">
+                    <option value="available" ${item.status === 'available' ? 'selected' : ''}>Available</option>
+                    <option value="reserved" ${item.status === 'reserved' ? 'selected' : ''}>Reserved</option>
+                    <option value="sold" ${item.status === 'sold' ? 'selected' : ''}>Sold</option>
+                  </select>
+                </td>
+                <td>
+                  <div class="table-actions">
+                    <button class="btn btn-sm btn-outline btn-edit" data-id="${item.id}">Edit</button>
+                    <button class="btn btn-sm btn-ghost btn-delete" data-id="${item.id}">Del</button>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Mobile cards per category
+    cardsHtml += `
+      <div class="admin-category-section-mobile">
+        <div class="admin-category-header">
+          <h3 class="admin-category-title">${category}</h3>
+          <span class="admin-category-count">${catItems.length}</span>
+        </div>
+        <div class="admin-item-cards-group sortable-cards" data-category="${category}">
+          ${catItems.map(item => {
+            return `
+            <div class="admin-item-card" data-id="${item.id}" draggable="true">
+              <span class="drag-handle-mobile" title="Drag to reorder">≡</span>
+              ${item.photo_urls && item.photo_urls.length > 0
+                ? `<img src="${item.photo_urls[0]}" alt="" class="admin-item-card-img">`
+                : `<div class="admin-item-card-img"></div>`
+              }
+              <div class="admin-item-card-body">
+                <div class="admin-item-card-name">${item.name}</div>
+                <div class="admin-item-card-price">S$${Number(item.price).toLocaleString()}</div>
+                <div class="admin-item-card-meta">${item.status}</div>
+                <div class="admin-item-card-actions">
+                  <button class="btn btn-sm btn-outline btn-edit" data-id="${item.id}">Edit</button>
+                  <select class="table-status-select" data-id="${item.id}" style="font-size:12px;padding:4px 6px;">
+                    <option value="available" ${item.status === 'available' ? 'selected' : ''}>Available</option>
+                    <option value="reserved" ${item.status === 'reserved' ? 'selected' : ''}>Reserved</option>
+                    <option value="sold" ${item.status === 'sold' ? 'selected' : ''}>Sold</option>
+                  </select>
+                  <button class="btn btn-sm btn-ghost btn-delete" data-id="${item.id}">Del</button>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   container.innerHTML = `
     <div class="admin-header">
       <h2 class="admin-title">Items (${items.length})</h2>
@@ -24,77 +126,9 @@ export function renderItemsList(container, items, handlers) {
         <a href="#/items/new" class="btn btn-primary">+ Add Item</a>
       </div>
     </div>
-
     ${items.length === 0 ? '<div class="items-empty"><p>No items yet</p><p>Click "Add Item" to get started</p></div>' : `
-      <table class="items-table">
-        <thead>
-          <tr>
-            <th style="width:36px"></th>
-            <th>Photo</th>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Category</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="sortable-tbody">
-          ${items.map((item, idx) => `
-            <tr data-id="${item.id}" data-index="${idx}" draggable="true">
-              <td><span class="drag-handle" title="Drag to reorder">≡</span></td>
-              <td>
-                ${item.photo_urls && item.photo_urls.length > 0
-                  ? `<img src="${item.photo_urls[0]}" alt="" class="table-img">`
-                  : `<div class="table-img" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--color-gray-light)">—</div>`
-                }
-              </td>
-              <td><span class="table-name">${item.name}</span></td>
-              <td><strong>S$${Number(item.price).toLocaleString()}</strong></td>
-              <td>${item.category}</td>
-              <td>
-                <select class="table-status-select" data-id="${item.id}">
-                  <option value="available" ${item.status === 'available' ? 'selected' : ''}>Available</option>
-                  <option value="reserved" ${item.status === 'reserved' ? 'selected' : ''}>Reserved</option>
-                  <option value="sold" ${item.status === 'sold' ? 'selected' : ''}>Sold</option>
-                </select>
-              </td>
-              <td>
-                <div class="table-actions">
-                  <button class="btn btn-sm btn-outline btn-edit" data-id="${item.id}">Edit</button>
-                  <button class="btn btn-sm btn-ghost btn-delete" data-id="${item.id}">Del</button>
-                </div>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-
-      <!-- Mobile cards -->
-      <div class="admin-item-cards" id="sortable-cards">
-        ${items.map((item, idx) => `
-          <div class="admin-item-card" data-id="${item.id}" data-index="${idx}" draggable="true">
-            <span class="drag-handle-mobile" title="Drag to reorder">≡</span>
-            ${item.photo_urls && item.photo_urls.length > 0
-              ? `<img src="${item.photo_urls[0]}" alt="" class="admin-item-card-img">`
-              : `<div class="admin-item-card-img"></div>`
-            }
-            <div class="admin-item-card-body">
-              <div class="admin-item-card-name">${item.name}</div>
-              <div class="admin-item-card-price">S$${Number(item.price).toLocaleString()}</div>
-              <div class="admin-item-card-meta">${item.category} · ${item.status}</div>
-              <div class="admin-item-card-actions">
-                <button class="btn btn-sm btn-outline btn-edit" data-id="${item.id}">Edit</button>
-                <select class="table-status-select" data-id="${item.id}" style="font-size:12px;padding:4px 6px;">
-                  <option value="available" ${item.status === 'available' ? 'selected' : ''}>Available</option>
-                  <option value="reserved" ${item.status === 'reserved' ? 'selected' : ''}>Reserved</option>
-                  <option value="sold" ${item.status === 'sold' ? 'selected' : ''}>Sold</option>
-                </select>
-                <button class="btn btn-sm btn-ghost btn-delete" data-id="${item.id}">Del</button>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
+      <div class="admin-tables-desktop">${tablesHtml}</div>
+      <div class="admin-cards-mobile">${cardsHtml}</div>
     `}
   `;
 
@@ -111,23 +145,31 @@ export function renderItemsList(container, items, handlers) {
     btn.addEventListener('click', () => handlers.onDelete(btn.dataset.id));
   });
 
-  // Drag-and-drop reorder for table rows
-  setupDragReorderList(container.querySelector('#sortable-tbody'), 'tr', items, handlers.onReorder);
-  // Drag-and-drop reorder for mobile cards
-  setupDragReorderList(container.querySelector('#sortable-cards'), '.admin-item-card', items, handlers.onReorder);
+  // Drag-and-drop reorder per category section
+  container.querySelectorAll('.sortable-tbody').forEach(tbody => {
+    const cat = tbody.dataset.category;
+    const catItems = grouped.get(cat);
+    setupDragReorderList(tbody, 'tr', catItems, handlers.onReorder);
+  });
+  container.querySelectorAll('.sortable-cards').forEach(cardGroup => {
+    const cat = cardGroup.dataset.category;
+    const catItems = grouped.get(cat);
+    setupDragReorderList(cardGroup, '.admin-item-card', catItems, handlers.onReorder);
+  });
 }
 
-function setupDragReorderList(listEl, childSelector, items, onReorder) {
+function setupDragReorderList(listEl, childSelector, catItems, onReorder) {
   if (!listEl || !onReorder) return;
 
   let dragEl = null;
+  const children = () => Array.from(listEl.querySelectorAll(childSelector));
 
-  listEl.querySelectorAll(childSelector).forEach(el => {
+  children().forEach(el => {
     el.addEventListener('dragstart', (e) => {
       dragEl = el;
       el.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', el.dataset.index);
+      e.dataTransfer.setData('text/plain', '');
     });
 
     el.addEventListener('dragend', () => {
@@ -139,9 +181,7 @@ function setupDragReorderList(listEl, childSelector, items, onReorder) {
     el.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      if (el !== dragEl) {
-        el.classList.add('drag-over');
-      }
+      if (el !== dragEl) el.classList.add('drag-over');
     });
 
     el.addEventListener('dragleave', () => {
@@ -153,15 +193,16 @@ function setupDragReorderList(listEl, childSelector, items, onReorder) {
       el.classList.remove('drag-over');
       if (!dragEl || dragEl === el) return;
 
-      const fromIndex = parseInt(dragEl.dataset.index);
-      const toIndex = parseInt(el.dataset.index);
+      // Get positions by DOM order
+      const all = children();
+      const fromIndex = all.indexOf(dragEl);
+      const toIndex = all.indexOf(el);
+      if (fromIndex === -1 || toIndex === -1) return;
 
-      // Reorder the items array
-      const reordered = [...items];
+      const reordered = [...catItems];
       const [moved] = reordered.splice(fromIndex, 1);
       reordered.splice(toIndex, 0, moved);
 
-      // Build new sort_order map: each item gets its position as sort_order
       const updates = reordered.map((item, i) => ({ id: item.id, sort_order: i }));
       onReorder(updates);
     });

@@ -275,10 +275,40 @@ button, select, input { font: inherit; color: inherit; }
 .pill.active { background: var(--color-teal); color: white; border-color: var(--color-teal); }
 
 /* === Results Count === */
-.results-count { font-size: 13px; color: var(--color-gray); margin-bottom: 16px; }
+.results-count { font-size: 13px; color: var(--color-gray); margin-bottom: 20px; }
+
+/* === Category Section Headers === */
+.category-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--color-navy);
+}
+
+.category-section-header:first-of-type {
+  margin-top: 0;
+}
+
+.category-heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.category-item-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gray);
+  background: var(--color-bg);
+  padding: 2px 10px;
+  border-radius: 100px;
+}
 
 /* === Item Grid === */
-.item-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.item-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 8px; }
 
 /* === Item Card === */
 .item-card { background: var(--color-surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform var(--transition), box-shadow var(--transition); display: flex; flex-direction: column; }

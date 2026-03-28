@@ -32,6 +32,43 @@
   flex-shrink: 0;
 }
 
+/* === Admin Category Sections === */
+.admin-category-section {
+  margin-bottom: 28px;
+}
+
+.admin-category-section-mobile {
+  margin-bottom: 24px;
+}
+
+.admin-category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-navy);
+}
+
+.admin-category-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.admin-category-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-gray);
+  background: var(--color-bg);
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+
+.admin-tables-desktop {}
+.admin-cards-mobile { display: none; }
+.admin-item-cards-group {}
+
 .drag-hint {
   font-size: 12px;
   color: var(--color-gray-light);
@@ -696,11 +733,11 @@ tr.drag-over td {
     padding: 16px;
   }
 
-  .items-table {
+  .admin-tables-desktop {
     display: none;
   }
 
-  .admin-item-cards {
+  .admin-cards-mobile {
     display: block;
   }
 

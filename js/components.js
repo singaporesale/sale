@@ -202,6 +202,7 @@ export function renderItemCard(item) {
 
 export function renderItemGrid(containerEl) {
   const filteredItems = store.get('filteredItems');
+  const filters = store.get('filters');
   const loading = store.get('loading');
 
   if (loading) {
@@ -224,15 +225,37 @@ export function renderItemGrid(containerEl) {
     return;
   }
 
-  containerEl.innerHTML = `
-    <div class="results-count">Showing ${filteredItems.length} item${filteredItems.length !== 1 ? 's' : ''}</div>
-    <div class="item-grid"></div>
-  `;
+  // Group items by category
+  const grouped = groupByCategory(filteredItems);
+  const isSingleCategory = filters.category !== 'all';
 
-  const grid = containerEl.querySelector('.item-grid');
-  for (const item of filteredItems) {
-    grid.appendChild(renderItemCard(item));
+  let html = `<div class="results-count">Showing ${filteredItems.length} item${filteredItems.length !== 1 ? 's' : ''}</div>`;
+
+  for (const [category, categoryItems] of grouped) {
+    if (!isSingleCategory) {
+      html += `<div class="category-section-header"><h2 class="category-heading">${category}</h2><span class="category-item-count">${categoryItems.length}</span></div>`;
+    }
+    html += `<div class="item-grid" data-category="${category}"></div>`;
   }
+
+  containerEl.innerHTML = html;
+
+  // Append cards into each grid
+  for (const [category, categoryItems] of grouped) {
+    const grid = containerEl.querySelector(`.item-grid[data-category="${category}"]`);
+    for (const item of categoryItems) {
+      grid.appendChild(renderItemCard(item));
+    }
+  }
+}
+
+function groupByCategory(items) {
+  const map = new Map();
+  for (const item of items) {
+    if (!map.has(item.category)) map.set(item.category, []);
+    map.get(item.category).push(item);
+  }
+  return map;
 }
 
 // --- Item Modal ---
