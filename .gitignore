@@ -1,0 +1,5 @@
+.DS_Store
+*.env
+setup.sh
+setup.js
+.claude/
