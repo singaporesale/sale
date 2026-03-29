@@ -112,6 +112,7 @@ export function renderItemsList(container, items, handlers, categoryOrder) {
                 <div class="admin-item-card-actions">
                   <button class="btn btn-sm btn-outline btn-edit" data-id="${item.id}">Edit</button>
                   <select class="table-status-select" data-id="${item.id}" style="font-size:12px;padding:4px 6px;">
+                    <option value="draft" ${item.status === 'draft' ? 'selected' : ''}>Draft</option>
                     <option value="available" ${item.status === 'available' ? 'selected' : ''}>Available</option>
                     <option value="reserved" ${item.status === 'reserved' ? 'selected' : ''}>Reserved</option>
                     <option value="sold" ${item.status === 'sold' ? 'selected' : ''}>Sold</option>

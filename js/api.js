@@ -68,7 +68,8 @@ export async function fetchSettings() {
 export async function updateSetting(key, value) {
   const { error } = await sb
     .from('site_settings')
-    .upsert({ key, value: String(value) }, { onConflict: 'key' });
+    .update({ value: String(value) })
+    .eq('key', key);
   if (error) throw error;
 }
 

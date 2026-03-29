@@ -94,18 +94,5 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="js/app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        try {
-          const settings = JSON.parse(sessionStorage.getItem('sg-sale-settings') || '{}');
-          const fab = document.getElementById('fab-whatsapp');
-          if (settings.whatsapp_number) {
-            fab.href = `https://wa.me/${settings.whatsapp_number}`;
-          }
-        } catch(e) {}
-      }, 2000);
-    });
-  </script>
 </body>
 </html>

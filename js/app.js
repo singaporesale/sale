@@ -112,6 +112,11 @@ function applyTextSettings() {
   if (settings.site_title) {
     document.title = settings.site_title;
   }
+  // Update WhatsApp FAB
+  const fab = document.getElementById('fab-whatsapp');
+  if (fab && settings.whatsapp_number) {
+    fab.href = `https://wa.me/${settings.whatsapp_number}`;
+  }
   // Apply color theme
   document.body.classList.remove('theme-rose', 'theme-sage', 'theme-lavender', 'theme-warm');
   if (settings.theme) {
@@ -153,7 +158,7 @@ function setupRealtime() {
   });
 
   subscribeSettings((payload) => {
-    if (payload.eventType === 'UPDATE') {
+    if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
       const settings = store.get('settings');
       store.set('settings', { ...settings, [payload.new.key]: payload.new.value });
       applyTextSettings();

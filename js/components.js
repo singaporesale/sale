@@ -60,7 +60,7 @@ function formatPrice(amount) {
 
 export function renderCategorySidebar(containerEl, onFilterChange) {
   const filters = store.get('filters');
-  const items = store.get('items');
+  const items = store.get('items').filter(i => i.status !== 'draft');
 
   const categoryCounts = {};
   let total = items.length;
@@ -116,7 +116,7 @@ export function renderFilterBar(containerEl, onFilterChange) {
   `;
 
   // Mobile category pills
-  const items = store.get('items');
+  const items = store.get('items').filter(i => i.status !== 'draft');
   const categoryCounts = {};
   for (const item of items) {
     categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
@@ -357,16 +357,18 @@ export function renderItemModal(item) {
     }
   }
 
-  overlay.querySelector('.modal-close').addEventListener('click', close);
+  function closeAndCleanup() {
+    close();
+    document.removeEventListener('keydown', onKey);
+  }
+
+  overlay.querySelector('.modal-close').addEventListener('click', closeAndCleanup);
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) close();
+    if (e.target === overlay) closeAndCleanup();
   });
 
   function onKey(e) {
-    if (e.key === 'Escape') {
-      close();
-      document.removeEventListener('keydown', onKey);
-    }
+    if (e.key === 'Escape') closeAndCleanup();
   }
   document.addEventListener('keydown', onKey);
 
