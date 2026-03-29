@@ -88,9 +88,12 @@ function onFilterChange() {
 
 function initTopBarCountdown() {
   const settings = store.get('settings');
-  if (settings.sale_end_date) {
-    const el = document.getElementById('topbar-countdown');
-    if (el) initCountdown(settings.sale_end_date, el, true);
+  const el = document.getElementById('topbar-countdown');
+  if (!el) return;
+  if (settings.show_countdown === 'true' && settings.sale_end_date) {
+    initCountdown(settings.sale_end_date, el, true);
+  } else {
+    el.textContent = '';
   }
 }
 

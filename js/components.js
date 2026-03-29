@@ -397,17 +397,17 @@ export function renderHero(containerEl) {
             <a href="https://wa.me/${esc(settings.whatsapp_number || '')}" target="_blank" rel="noopener" class="hero-link">WhatsApp Us</a>
           </div>
         </div>
-        ${settings.sale_start_date && settings.sale_end_date ? `
+        ${settings.show_countdown === 'true' && settings.sale_start_date && settings.sale_end_date ? `
           <p class="hero-dates">${esc(settings.sale_start_date)} — ${esc(settings.sale_end_date)}</p>
         ` : ''}
-        <div class="hero-countdown" id="hero-countdown"></div>
+        ${settings.show_countdown === 'true' ? '<div class="hero-countdown" id="hero-countdown"></div>' : ''}
         ${isFlash ? `<div class="hero-flash">${ICONS.flash} EXTRA ${esc(settings.flash_sale_discount)}% OFF EVERYTHING ${ICONS.flash}</div>` : ''}
         <a href="#items" class="btn-hero" onclick="document.getElementById('main-content').scrollIntoView({behavior:'smooth'}); return false;">Browse Items</a>
       </div>
     </div>
   `;
 
-  if (settings.sale_end_date) {
+  if (settings.show_countdown === 'true' && settings.sale_end_date) {
     const countdownEl = containerEl.querySelector('#hero-countdown');
     initCountdown(settings.sale_end_date, countdownEl);
   }

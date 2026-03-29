@@ -34,6 +34,7 @@ export const SETTINGS_SCHEMA = {
   site_title:          { type: 'text', label: 'Site Title' },
   flash_sale_active:   { type: 'boolean', label: 'Flash Sale Active' },
   flash_sale_discount: { type: 'number', label: 'Flash Sale Discount %', min: 5, max: 50 },
+  show_countdown:      { type: 'boolean', label: 'Show Countdown Timer & Dates' },
   sale_start_date:     { type: 'date', label: 'Sale Start Date' },
   sale_end_date:       { type: 'date', label: 'Sale End Date' },
   address:             { type: 'textarea', label: 'Pickup Address' },
