@@ -69,6 +69,7 @@ button, select, input { font: inherit; color: inherit; }
 .hero-link:hover { opacity: 1; }
 .hero-dates { font-size: 14px; opacity: 0.8; margin-bottom: 16px; }
 .hero-countdown { margin-bottom: 24px; }
+.hero-announcement { font-size: 15px; font-weight: 700; color: var(--color-accent); margin-bottom: 20px; }
 .hero-flash { background: var(--color-accent); display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 100px; font-weight: 700; font-size: 14px; margin-bottom: 24px; animation: pulse 2s ease-in-out infinite; }
 .btn-hero { display: inline-block; background: white; color: var(--color-navy); font-weight: 600; font-size: 15px; padding: 12px 32px; border-radius: 100px; transition: transform var(--transition), box-shadow var(--transition); }
 .btn-hero:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
@@ -138,10 +139,10 @@ button, select, input { font: inherit; color: inherit; }
 
 .delivery-note {
   text-align: center;
-  font-size: 13px;
-  color: var(--color-gray);
+  font-size: 14px;
+  color: var(--color-accent);
   margin-top: 14px;
-  font-style: italic;
+  font-weight: 700;
 }
 
 /* === Countdown === */
@@ -448,6 +449,8 @@ button, select, input { font: inherit; color: inherit; }
 .status-badge.status-available { background: #d4edda; color: #155724; }
 .status-badge.status-reserved { background: #fff3cd; color: #856404; }
 .status-badge.status-sold { background: #f8d7da; color: #721c24; }
+.status-badge.status-draft { background: #e2e8f0; color: #475569; }
+.badge-draft { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; background: #e2e8f0; color: #475569; vertical-align: middle; }
 
 .original-link { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--color-teal); text-decoration: underline; text-underline-offset: 2px; margin-bottom: 20px; }
 

@@ -1,9 +1,16 @@
-import { getSession, signIn, signOut, fetchItems, fetchSettings, updateItem, deleteItem, createItem, updateSettings } from './api.js';
-import { renderItemsList, renderItemForm, renderSettingsForm, showAlert } from './admin-components.js';
-import { CATEGORIES, CONDITIONS } from './config.js';
+import { getSession, signIn, signOut, fetchItems, fetchSettings, updateItem, deleteItem, createItem, updateSettings, updateSetting } from './api.js';
+import { renderItemsList, renderItemForm, renderSettingsForm, renderCategoryManager, showAlert } from './admin-components.js';
+import { DEFAULT_CATEGORIES, CONDITIONS } from './config.js';
 
 let items = [];
 let settings = {};
+
+function getCategories() {
+  try {
+    if (settings.categories) return JSON.parse(settings.categories);
+  } catch (e) {}
+  return DEFAULT_CATEGORIES;
+}
 
 // --- Auth ---
 
@@ -70,10 +77,10 @@ function handleRoute() {
   });
 
   if (hash === 'items') {
-    renderItemsList(main, items, getItemListHandlers());
+    renderItemsList(main, items, getItemListHandlers(), getCategories());
   } else if (hash === 'items/new') {
     renderItemForm(main, null, {
-      categories: CATEGORIES,
+      categories: getCategories(),
       conditions: CONDITIONS,
       onSave: async (itemData, existingId) => {
         try {
@@ -99,7 +106,7 @@ function handleRoute() {
       return;
     }
     renderItemForm(main, item, {
-      categories: CATEGORIES,
+      categories: getCategories(),
       conditions: CONDITIONS,
       onSave: async (itemData) => {
         try {
@@ -117,6 +124,33 @@ function handleRoute() {
         location.hash = '/items';
       },
       onCancel: () => { location.hash = '/items'; }
+    });
+  } else if (hash === 'categories') {
+    const catItems = {};
+    for (const item of items) {
+      catItems[item.category] = (catItems[item.category] || 0) + 1;
+    }
+    renderCategoryManager(main, getCategories(), catItems, {
+      onSave: async (cats) => {
+        try {
+          const json = JSON.stringify(cats);
+          await updateSetting('categories', json);
+          settings.categories = json;
+          showAlert(main, 'Categories saved!', 'success');
+        } catch (err) {
+          showAlert(main, err.message, 'error');
+        }
+      },
+      onRename: async (oldName, newName) => {
+        try {
+          // Update all items with the old category name
+          const toUpdate = items.filter(i => i.category === oldName);
+          await Promise.all(toUpdate.map(i => updateItem(i.id, { category: newName })));
+          await loadData();
+        } catch (err) {
+          showAlert(main, err.message, 'error');
+        }
+      }
     });
   } else if (hash === 'settings') {
     renderSettingsForm(main, settings, {
@@ -139,14 +173,14 @@ function getItemListHandlers() {
       await updateItem(id, { status });
       await loadData();
       const main = document.getElementById('admin-main');
-      renderItemsList(main, items, getItemListHandlers());
+      renderItemsList(main, items, getItemListHandlers(), getCategories());
     },
     onDelete: async (id) => {
       if (!confirm('Delete this item?')) return;
       await deleteItem(id);
       await loadData();
       const main = document.getElementById('admin-main');
-      renderItemsList(main, items, getItemListHandlers());
+      renderItemsList(main, items, getItemListHandlers(), getCategories());
     },
     onEdit: (id) => { location.hash = `/items/${id}`; },
     onReorder: async (updates) => {
@@ -154,7 +188,7 @@ function getItemListHandlers() {
         await Promise.all(updates.map(u => updateItem(u.id, { sort_order: u.sort_order })));
         await loadData();
         const main = document.getElementById('admin-main');
-        renderItemsList(main, items, getItemListHandlers());
+        renderItemsList(main, items, getItemListHandlers(), getCategories());
       } catch (err) {
         console.error('Reorder error:', err);
       }

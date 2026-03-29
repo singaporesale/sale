@@ -11,6 +11,9 @@ function applyFilters() {
   const f = store.get('filters');
   const settings = store.get('settings');
 
+  // Never show draft items on the public storefront
+  items = items.filter(i => i.status !== 'draft');
+
   if (f.availableOnly) {
     items = items.filter(i => i.status === 'available');
   }
@@ -84,6 +87,20 @@ function onFilterChange() {
   renderCategorySidebar(sidebar, onFilterChange);
 }
 
+// --- Apply Text Settings to static HTML ---
+
+function applyTextSettings() {
+  const settings = store.get('settings');
+  const set = (id, key) => {
+    const el = document.getElementById(id);
+    if (el && settings[key]) el.textContent = settings[key];
+  };
+  set('topbar-logo-text', 'topbar_text');
+  set('topbar-paynow', 'payment_text');
+  set('footer-text', 'footer_text');
+  set('footer-sub', 'footer_sub');
+}
+
 // --- Top Bar Countdown ---
 
 function initTopBarCountdown() {
@@ -121,6 +138,8 @@ function setupRealtime() {
     if (payload.eventType === 'UPDATE') {
       const settings = store.get('settings');
       store.set('settings', { ...settings, [payload.new.key]: payload.new.value });
+      applyTextSettings();
+      renderHero(document.getElementById('hero'));
       applyFilters();
       render();
       initTopBarCountdown();
@@ -141,6 +160,7 @@ async function init() {
 
     sessionStorage.setItem('sg-sale-settings', JSON.stringify(settings));
 
+    applyTextSettings();
     renderHero(document.getElementById('hero'));
     initTopBarCountdown();
     applyFilters();

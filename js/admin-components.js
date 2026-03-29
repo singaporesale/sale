@@ -16,7 +16,7 @@ export function showAlert(container, message, type = 'success') {
 
 // --- Items List ---
 
-export function renderItemsList(container, items, handlers) {
+export function renderItemsList(container, items, handlers, categoryOrder) {
   // Group items by category
   const grouped = new Map();
   for (const item of items) {
@@ -24,12 +24,18 @@ export function renderItemsList(container, items, handlers) {
     grouped.get(item.category).push(item);
   }
 
+  // Sort categories: defined order first, then any extras
+  const orderedCategories = categoryOrder
+    ? [...categoryOrder.filter(c => grouped.has(c)), ...[...grouped.keys()].filter(c => !categoryOrder.includes(c))]
+    : [...grouped.keys()];
+
   let globalIndex = 0;
 
   let tablesHtml = '';
   let cardsHtml = '';
 
-  for (const [category, catItems] of grouped) {
+  for (const category of orderedCategories) {
+    const catItems = grouped.get(category);
     // Desktop table per category
     tablesHtml += `
       <div class="admin-category-section">
@@ -60,10 +66,11 @@ export function renderItemsList(container, items, handlers) {
                     : `<div class="table-img" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--color-gray-light)">—</div>`
                   }
                 </td>
-                <td><span class="table-name">${esc(item.name)}</span></td>
+                <td>${item.status === 'draft' ? '<span class="badge-draft">DRAFT</span> ' : ''}<span class="table-name">${esc(item.name)}</span></td>
                 <td><strong>S$${Number(item.price).toLocaleString()}</strong></td>
                 <td>
                   <select class="table-status-select" data-id="${item.id}">
+                    <option value="draft" ${item.status === 'draft' ? 'selected' : ''}>Draft</option>
                     <option value="available" ${item.status === 'available' ? 'selected' : ''}>Available</option>
                     <option value="reserved" ${item.status === 'reserved' ? 'selected' : ''}>Reserved</option>
                     <option value="sold" ${item.status === 'sold' ? 'selected' : ''}>Sold</option>
@@ -99,7 +106,7 @@ export function renderItemsList(container, items, handlers) {
                 : `<div class="admin-item-card-img"></div>`
               }
               <div class="admin-item-card-body">
-                <div class="admin-item-card-name">${esc(item.name)}</div>
+                <div class="admin-item-card-name">${item.status === 'draft' ? '<span class="badge-draft">DRAFT</span> ' : ''}${esc(item.name)}</div>
                 <div class="admin-item-card-price">S$${Number(item.price).toLocaleString()}</div>
                 <div class="admin-item-card-meta">${esc(item.status)}</div>
                 <div class="admin-item-card-actions">
@@ -264,6 +271,7 @@ export function renderItemForm(container, item, opts) {
         <div class="form-group">
           <label for="item-condition">Condition</label>
           <select id="item-condition">
+            <option value="">— None —</option>
             ${opts.conditions.map(c => `<option value="${c}" ${item?.condition === c ? 'selected' : ''}>${c}</option>`).join('')}
           </select>
         </div>
@@ -277,6 +285,7 @@ export function renderItemForm(container, item, opts) {
         <div class="form-group">
           <label for="item-status">Status</label>
           <select id="item-status">
+            <option value="draft" ${item?.status === 'draft' ? 'selected' : ''}>Draft</option>
             <option value="available" ${(!item || item?.status === 'available') ? 'selected' : ''}>Available</option>
             <option value="reserved" ${item?.status === 'reserved' ? 'selected' : ''}>Reserved</option>
             <option value="sold" ${item?.status === 'sold' ? 'selected' : ''}>Sold</option>
@@ -321,7 +330,9 @@ export function renderItemForm(container, item, opts) {
       </div>
 
       <div class="btn-group">
-        <button type="submit" class="btn btn-primary">Save Item</button>
+        <button type="submit" class="btn btn-primary">${item?.status === 'draft' ? 'Save Draft' : 'Save Item'}</button>
+        ${item?.status === 'draft' ? '<button type="button" class="btn btn-primary" id="publish-item">Publish</button>' : ''}
+        ${isNew ? '<button type="button" class="btn btn-outline" id="save-draft">Save as Draft</button>' : ''}
         ${isNew ? '<button type="button" class="btn btn-outline" id="save-add-another">Save & Add Another</button>' : ''}
       </div>
     </form>
@@ -347,6 +358,28 @@ export function renderItemForm(container, item, opts) {
       data.photo_urls = currentPhotos;
       await opts.onSave(data, item?.id);
       location.hash = '/items/new';
+    });
+  }
+
+  // Save as Draft (new items)
+  const draftBtn = container.querySelector('#save-draft');
+  if (draftBtn) {
+    draftBtn.addEventListener('click', async () => {
+      const data = collectFormData();
+      data.photo_urls = currentPhotos;
+      data.status = 'draft';
+      await opts.onSave(data, item?.id);
+    });
+  }
+
+  // Publish (draft items)
+  const publishBtn = container.querySelector('#publish-item');
+  if (publishBtn) {
+    publishBtn.addEventListener('click', async () => {
+      const data = collectFormData();
+      data.photo_urls = currentPhotos;
+      data.status = 'available';
+      await opts.onSave(data, item?.id);
     });
   }
 
@@ -469,7 +502,7 @@ export function renderItemForm(container, item, opts) {
       description: form.querySelector('#item-description').value.trim() || null,
       price: parseFloat(form.querySelector('#item-price').value),
       original_price: form.querySelector('#item-original-price').value ? parseFloat(form.querySelector('#item-original-price').value) : null,
-      condition: form.querySelector('#item-condition').value,
+      condition: form.querySelector('#item-condition').value || null,
       dimensions: form.querySelector('#item-dimensions').value.trim() || null,
       status: form.querySelector('#item-status').value,
       sort_order: parseInt(form.querySelector('#item-sort').value) || 0,
@@ -551,6 +584,106 @@ export function renderSettingsForm(container, settings, handlers) {
     }
     handlers.onSave(newSettings);
   });
+}
+
+// --- Category Manager ---
+
+export function renderCategoryManager(container, categories, itemCounts, handlers) {
+  let cats = [...categories];
+
+  function renderList() {
+    container.innerHTML = `
+      <div class="admin-header">
+        <h2 class="admin-title">Categories (${cats.length})</h2>
+        <div class="btn-group">
+          <span class="drag-hint">Drag ≡ to reorder</span>
+          <button class="btn btn-primary" id="cat-add">+ Add Category</button>
+        </div>
+      </div>
+      <div class="category-manager">
+        ${cats.map((cat, i) => {
+          const count = itemCounts[cat] || 0;
+          return `
+          <div class="cat-row" data-index="${i}" draggable="true">
+            <span class="drag-handle" title="Drag to reorder">≡</span>
+            <input type="text" class="cat-name-input" value="${esc(cat)}" data-index="${i}">
+            <span class="cat-item-count">${count} item${count !== 1 ? 's' : ''}</span>
+            <button class="btn btn-sm btn-ghost cat-delete" data-index="${i}" ${count > 0 ? 'disabled title="Has items"' : ''}>Del</button>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="padding-top: 16px;">
+        <button class="btn btn-primary" id="cat-save">Save Categories</button>
+      </div>
+    `;
+
+    // Add category
+    container.querySelector('#cat-add').addEventListener('click', () => {
+      const name = prompt('New category name:');
+      if (!name || !name.trim()) return;
+      const trimmed = name.trim();
+      if (cats.includes(trimmed)) { alert('Category already exists'); return; }
+      cats.push(trimmed);
+      renderList();
+    });
+
+    // Save
+    container.querySelector('#cat-save').addEventListener('click', async () => {
+      // Read current names from inputs (handles renames)
+      const inputs = container.querySelectorAll('.cat-name-input');
+      const oldCats = [...cats];
+      const newCats = [];
+      const renames = [];
+
+      for (const input of inputs) {
+        const idx = parseInt(input.dataset.index);
+        const newName = input.value.trim();
+        if (!newName) continue;
+        newCats.push(newName);
+        if (oldCats[idx] && oldCats[idx] !== newName) {
+          renames.push({ oldName: oldCats[idx], newName });
+        }
+      }
+
+      // Process renames (update items)
+      for (const { oldName, newName } of renames) {
+        await handlers.onRename(oldName, newName);
+      }
+
+      cats = newCats;
+      await handlers.onSave(cats);
+      renderList();
+    });
+
+    // Delete
+    container.querySelectorAll('.cat-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.index);
+        cats.splice(idx, 1);
+        renderList();
+      });
+    });
+
+    // Drag-and-drop reorder
+    let dragIdx = null;
+    container.querySelectorAll('.cat-row').forEach(row => {
+      row.addEventListener('dragstart', () => { dragIdx = parseInt(row.dataset.index); row.style.opacity = '0.4'; });
+      row.addEventListener('dragend', () => { row.style.opacity = ''; });
+      row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
+      row.addEventListener('dragleave', () => { row.classList.remove('drag-over'); });
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        row.classList.remove('drag-over');
+        const toIdx = parseInt(row.dataset.index);
+        if (dragIdx === null || dragIdx === toIdx) return;
+        const [moved] = cats.splice(dragIdx, 1);
+        cats.splice(toIdx, 0, moved);
+        renderList();
+      });
+    });
+  }
+
+  renderList();
 }
 
 // --- Helpers ---

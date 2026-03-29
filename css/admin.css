@@ -593,6 +593,21 @@ tr.drag-over td {
   transform: translateX(20px);
 }
 
+/* === Category Manager === */
+.category-manager { display: flex; flex-direction: column; gap: 4px; }
+.cat-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+}
+.cat-row.drag-over { border-color: var(--color-teal); background: rgba(0, 128, 128, 0.05); }
+.cat-name-input {
+  flex: 1; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-xs);
+  font-size: 14px; background: var(--color-bg);
+}
+.cat-name-input:focus { border-color: var(--color-teal); outline: none; }
+.cat-item-count { font-size: 12px; color: var(--color-gray); white-space: nowrap; min-width: 60px; }
+.cat-delete:disabled { opacity: 0.3; cursor: not-allowed; }
+
 /* === Settings === */
 .settings-form {
   background: var(--color-surface);

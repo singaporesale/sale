@@ -10,9 +10,9 @@ CREATE TABLE IF NOT EXISTS items (
   price NUMERIC NOT NULL,
   original_price NUMERIC,
   category TEXT NOT NULL,
-  condition TEXT DEFAULT 'Good',
+  condition TEXT,
   dimensions TEXT,
-  status TEXT DEFAULT 'available' CHECK (status IN ('available', 'sold', 'reserved')),
+  status TEXT DEFAULT 'available' CHECK (status IN ('available', 'sold', 'reserved', 'draft')),
   open_to_offers BOOLEAN DEFAULT FALSE,
   original_item_url TEXT,
   photo_urls TEXT[] DEFAULT '{}',
@@ -35,7 +35,8 @@ INSERT INTO site_settings (key, value) VALUES
   ('site_title', 'Whole Household Relocation Sale'),
   ('address', 'Your Address Here, Singapore'),
   ('address_maps_url', 'https://maps.google.com/?q=YOUR+ADDRESS'),
-  ('whatsapp_number', '6587899064')
+  ('whatsapp_number', '6587899064'),
+  ('categories', '["Furniture","Electronics","Kitchen","Bedroom","Living Room","Bathroom","Books","Clothing","Sports","Kids","Decor","Other"]')
 ON CONFLICT (key) DO NOTHING;
 
 -- Enable Row Level Security

@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { CATEGORIES, SORT_OPTIONS } from './config.js';
+import { DEFAULT_CATEGORIES, SORT_OPTIONS } from './config.js';
 import { createGallery } from './gallery.js';
 import { initCountdown } from './countdown.js';
 import { esc } from './utils.js';
@@ -16,6 +16,14 @@ export const ICONS = {
 };
 
 // --- Helpers ---
+
+export function getCategories() {
+  try {
+    const raw = store.get('settings')?.categories;
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return DEFAULT_CATEGORIES;
+}
 
 export function getEffectivePrice(item, settings) {
   if (settings.flash_sale_active === 'true' && settings.flash_sale_discount) {
@@ -65,7 +73,7 @@ export function renderCategorySidebar(containerEl, onFilterChange) {
       <h3 class="sidebar-title">Categories</h3>
       <ul class="cat-list">
         <li><button class="cat-link ${filters.category === 'all' ? 'active' : ''}" data-cat="all">All Items <span class="cat-count">${total}</span></button></li>
-        ${CATEGORIES.map(cat => {
+        ${getCategories().map(cat => {
           const count = categoryCounts[cat] || 0;
           if (count === 0) return '';
           return `<li><button class="cat-link ${filters.category === cat ? 'active' : ''}" data-cat="${cat}">${cat} <span class="cat-count">${count}</span></button></li>`;
@@ -116,7 +124,7 @@ export function renderFilterBar(containerEl, onFilterChange) {
   const pillsEl = containerEl.querySelector('#mobile-cat-pills');
   pillsEl.innerHTML = `
     <button class="pill ${filters.category === 'all' ? 'active' : ''}" data-cat="all">All</button>
-    ${CATEGORIES.map(cat => {
+    ${getCategories().map(cat => {
       if (!categoryCounts[cat]) return '';
       return `<button class="pill ${filters.category === cat ? 'active' : ''}" data-cat="${cat}">${cat}</button>`;
     }).join('')}
@@ -190,9 +198,9 @@ export function renderItemCard(item) {
         ${savings > 0 ? `<span class="price-savings">-${savings}%</span>` : ''}
       </div>
       ${item.open_to_offers ? '<span class="badge-offer">Open to offers</span>' : ''}
-      <div class="card-meta">
-        <span class="badge-condition badge-${esc(item.condition?.toLowerCase().replace(/\s/g, '-') || 'good')}">${esc(item.condition || 'Good')}</span>
-      </div>
+      ${item.condition ? `<div class="card-meta">
+        <span class="badge-condition badge-${esc(item.condition.toLowerCase().replace(/\s/g, '-'))}">${esc(item.condition)}</span>
+      </div>` : ''}
     </div>
   `;
 
@@ -256,7 +264,17 @@ function groupByCategory(items) {
     if (!map.has(item.category)) map.set(item.category, []);
     map.get(item.category).push(item);
   }
-  return map;
+  // Sort by defined category order
+  const order = getCategories();
+  const sorted = new Map();
+  for (const cat of order) {
+    if (map.has(cat)) sorted.set(cat, map.get(cat));
+  }
+  // Append any categories not in the defined order
+  for (const [cat, items] of map) {
+    if (!sorted.has(cat)) sorted.set(cat, items);
+  }
+  return sorted;
 }
 
 // --- Item Modal ---
@@ -301,7 +319,7 @@ export function renderItemModal(item) {
         ${item.dimensions ? `<div class="modal-section"><h4>Dimensions</h4><p>${esc(item.dimensions)}</p></div>` : ''}
 
         <div class="modal-details">
-          <div class="detail-row"><span class="detail-label">Condition</span><span class="badge-condition badge-${esc(item.condition?.toLowerCase().replace(/\s/g, '-') || 'good')}">${esc(item.condition || 'Good')}</span></div>
+          ${item.condition ? `<div class="detail-row"><span class="detail-label">Condition</span><span class="badge-condition badge-${esc(item.condition.toLowerCase().replace(/\s/g, '-'))}">${esc(item.condition)}</span></div>` : ''}
           <div class="detail-row"><span class="detail-label">Status</span><span class="status-badge status-${esc(item.status)}">${esc(item.status.charAt(0).toUpperCase() + item.status.slice(1))}</span></div>
         </div>
 
@@ -386,7 +404,7 @@ export function renderHero(containerEl) {
     <div class="hero">
       <div class="hero-content">
         <h1 class="hero-title">${esc(settings.site_title || 'Whole Household Relocation Sale')}</h1>
-        <p class="hero-subtitle">Everything must go — furniture, electronics, kitchen, decor & more</p>
+        <p class="hero-subtitle">${esc(settings.hero_subtitle || 'Everything must go — furniture, electronics, kitchen, decor & more')}</p>
         <div class="hero-details">
           <div class="hero-detail">
             <span class="hero-icon">${ICONS.mapPin}</span>
@@ -402,7 +420,8 @@ export function renderHero(containerEl) {
         ` : ''}
         ${settings.show_countdown === 'true' ? '<div class="hero-countdown" id="hero-countdown"></div>' : ''}
         ${isFlash ? `<div class="hero-flash">${ICONS.flash} EXTRA ${esc(settings.flash_sale_discount)}% OFF EVERYTHING ${ICONS.flash}</div>` : ''}
-        <a href="#items" class="btn-hero" onclick="document.getElementById('main-content').scrollIntoView({behavior:'smooth'}); return false;">Browse Items</a>
+        ${settings.announcement_text ? `<p class="hero-announcement">${esc(settings.announcement_text)}</p>` : ''}
+        <a href="#items" class="btn-hero" onclick="document.getElementById('main-content').scrollIntoView({behavior:'smooth'}); return false;">${esc(settings.hero_button_text || 'Browse Items')}</a>
       </div>
     </div>
   `;
