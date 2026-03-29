@@ -405,23 +405,12 @@ export function renderHero(containerEl) {
       <div class="hero-content">
         <h1 class="hero-title">${esc(settings.site_title || 'Whole Household Relocation Sale')}</h1>
         <p class="hero-subtitle">${esc(settings.hero_subtitle || 'Everything must go — furniture, electronics, kitchen, decor & more')}</p>
-        <div class="hero-details">
-          <div class="hero-detail">
-            <span class="hero-icon">${ICONS.mapPin}</span>
-            <a href="${esc(settings.address_maps_url || '#')}" target="_blank" rel="noopener" class="hero-link">${esc(settings.address || 'Singapore')}</a>
-          </div>
-          <div class="hero-detail">
-            <span class="hero-icon">${ICONS.whatsapp}</span>
-            <a href="https://wa.me/${esc(settings.whatsapp_number || '')}" target="_blank" rel="noopener" class="hero-link">WhatsApp Us</a>
-          </div>
-        </div>
         ${settings.show_countdown === 'true' && settings.sale_start_date && settings.sale_end_date ? `
           <p class="hero-dates">${esc(settings.sale_start_date)} — ${esc(settings.sale_end_date)}</p>
         ` : ''}
         ${settings.show_countdown === 'true' ? '<div class="hero-countdown" id="hero-countdown"></div>' : ''}
         ${isFlash ? `<div class="hero-flash">${ICONS.flash} EXTRA ${esc(settings.flash_sale_discount)}% OFF EVERYTHING ${ICONS.flash}</div>` : ''}
         ${settings.announcement_text ? `<p class="hero-announcement">${esc(settings.announcement_text)}</p>` : ''}
-        <a href="#items" class="btn-hero" onclick="document.getElementById('main-content').scrollIntoView({behavior:'smooth'}); return false;">${esc(settings.hero_button_text || 'Browse Items')}</a>
       </div>
     </div>
   `;

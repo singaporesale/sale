@@ -91,14 +91,27 @@ function onFilterChange() {
 
 function applyTextSettings() {
   const settings = store.get('settings');
-  const set = (id, key) => {
+  const set = (id, value) => {
     const el = document.getElementById(id);
-    if (el && settings[key]) el.textContent = settings[key];
+    if (el && value) el.textContent = value;
   };
-  set('topbar-logo-text', 'topbar_text');
-  set('topbar-paynow', 'payment_text');
-  set('footer-text', 'footer_text');
-  set('footer-sub', 'footer_sub');
+  const title = settings.topbar_text || settings.site_title;
+  set('topbar-logo-text', title);
+  set('topbar-paynow', settings.payment_text);
+  set('delivery-title', settings.delivery_title);
+  set('delivery-1-title', settings.delivery_1_title);
+  set('delivery-1-desc', settings.delivery_1_desc);
+  set('delivery-2-title', settings.delivery_2_title);
+  set('delivery-2-desc', settings.delivery_2_desc);
+  set('delivery-3-title', settings.delivery_3_title);
+  set('delivery-3-desc', settings.delivery_3_desc);
+  set('delivery-note', settings.delivery_note);
+  set('footer-text', settings.footer_text);
+  set('footer-sub', settings.footer_sub);
+  // Update browser tab title
+  if (settings.site_title) {
+    document.title = settings.site_title;
+  }
 }
 
 // --- Top Bar Countdown ---
