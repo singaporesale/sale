@@ -112,6 +112,11 @@ function applyTextSettings() {
   if (settings.site_title) {
     document.title = settings.site_title;
   }
+  // Apply color theme
+  document.body.classList.remove('theme-rose', 'theme-sage', 'theme-lavender', 'theme-warm');
+  if (settings.theme) {
+    document.body.classList.add(`theme-${settings.theme}`);
+  }
 }
 
 // --- Top Bar Countdown ---

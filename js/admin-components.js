@@ -545,6 +545,18 @@ export function renderSettingsForm(container, settings, handlers) {
             </div>
           `;
         }
+        if (schema.type === 'select') {
+          return `
+            <div class="settings-row">
+              <span class="settings-label">${schema.label}</span>
+              <div class="settings-input">
+                <select name="${key}">
+                  ${schema.options.map(opt => `<option value="${esc(opt.value)}" ${value === opt.value ? 'selected' : ''}>${esc(opt.label)}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          `;
+        }
         if (schema.type === 'textarea') {
           return `
             <div class="settings-row">

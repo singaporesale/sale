@@ -31,6 +31,13 @@ export const IMAGE_MAX_WIDTH = 1200;
 export const THUMB_MAX_WIDTH = 400;
 
 export const SETTINGS_SCHEMA = {
+  theme:               { type: 'select', label: 'Color Theme', options: [
+    { value: '', label: 'Classic (Navy & Teal)' },
+    { value: 'rose', label: 'Rose (Warm Pink)' },
+    { value: 'sage', label: 'Sage (Earthy Green)' },
+    { value: 'lavender', label: 'Lavender (Soft Purple)' },
+    { value: 'warm', label: 'Warm (Terracotta)' },
+  ]},
   site_title:          { type: 'text', label: 'Site Title' },
   topbar_text:         { type: 'text', label: 'Topbar Logo Text' },
   payment_text:        { type: 'text', label: 'Payment Note (topbar)' },

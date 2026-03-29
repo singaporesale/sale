@@ -25,6 +25,47 @@
   --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* === Themes === */
+body.theme-rose {
+  --color-accent: #D4547A;
+  --color-accent-dark: #B83D62;
+  --color-navy: #4A2545;
+  --color-navy-light: #6B3A65;
+  --color-teal: #D4547A;
+  --color-teal-dark: #B83D62;
+  --color-gold: #F2A07B;
+}
+
+body.theme-sage {
+  --color-accent: #C67D5B;
+  --color-accent-dark: #A6624A;
+  --color-navy: #3D5A47;
+  --color-navy-light: #4E7259;
+  --color-teal: #7BA887;
+  --color-teal-dark: #5E8C6A;
+  --color-gold: #D4A96A;
+}
+
+body.theme-lavender {
+  --color-accent: #C47DB5;
+  --color-accent-dark: #A45E96;
+  --color-navy: #3C3566;
+  --color-navy-light: #524A80;
+  --color-teal: #8B7BBF;
+  --color-teal-dark: #7262A8;
+  --color-gold: #E8B87D;
+}
+
+body.theme-warm {
+  --color-accent: #D97758;
+  --color-accent-dark: #C25E3F;
+  --color-navy: #5C3D2E;
+  --color-navy-light: #7A5543;
+  --color-teal: #D4956A;
+  --color-teal-dark: #BA7D52;
+  --color-gold: #E8B44C;
+}
+
 /* === Reset === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
