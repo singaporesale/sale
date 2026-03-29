@@ -411,6 +411,7 @@ export function renderHero(containerEl) {
         ${settings.show_countdown === 'true' ? '<div class="hero-countdown" id="hero-countdown"></div>' : ''}
         ${isFlash ? `<div class="hero-flash">${ICONS.flash} EXTRA ${esc(settings.flash_sale_discount)}% OFF EVERYTHING ${ICONS.flash}</div>` : ''}
         ${settings.announcement_text ? `<p class="hero-announcement">${esc(settings.announcement_text)}</p>` : ''}
+        ${settings.whatsapp_number ? `<a href="https://wa.me/${esc(settings.whatsapp_number)}" target="_blank" rel="noopener" class="btn-hero">${ICONS.whatsapp} WhatsApp Us!</a>` : ''}
       </div>
     </div>
   `;
