@@ -51,6 +51,7 @@ CREATE POLICY "Authenticated delete items" ON items FOR DELETE TO authenticated 
 
 -- RLS Policies: site_settings
 CREATE POLICY "Public read settings" ON site_settings FOR SELECT USING (true);
+CREATE POLICY "Authenticated insert settings" ON site_settings FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Authenticated update settings" ON site_settings FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 -- Storage Policies: photos bucket
