@@ -75,9 +75,13 @@ function handleRoute() {
     renderItemForm(main, null, {
       categories: CATEGORIES,
       conditions: CONDITIONS,
-      onSave: async (itemData) => {
+      onSave: async (itemData, existingId) => {
         try {
-          await createItem(itemData);
+          if (existingId) {
+            await updateItem(existingId, itemData);
+          } else {
+            await createItem(itemData);
+          }
           showAlert(main, 'Item created successfully!', 'success');
           await loadData();
           location.hash = '/items';

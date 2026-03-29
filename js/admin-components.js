@@ -336,7 +336,7 @@ export function renderItemForm(container, item, opts) {
     e.preventDefault();
     const data = collectFormData();
     data.photo_urls = currentPhotos;
-    await opts.onSave(data);
+    await opts.onSave(data, item?.id);
   });
 
   // Save & Add Another
@@ -345,7 +345,7 @@ export function renderItemForm(container, item, opts) {
     addAnother.addEventListener('click', async () => {
       const data = collectFormData();
       data.photo_urls = currentPhotos;
-      await opts.onSave(data);
+      await opts.onSave(data, item?.id);
       location.hash = '/items/new';
     });
   }
