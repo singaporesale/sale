@@ -2,6 +2,7 @@ import { store } from './store.js';
 import { fetchItems, fetchSettings, subscribeItems, subscribeSettings } from './api.js';
 import { renderFilterBar, renderItemGrid, renderItemModal, renderFlashBanner, renderHero, renderCategorySidebar, getEffectivePrice, getSavingsPercent } from './components.js';
 import { initCountdown } from './countdown.js';
+import { esc } from './utils.js';
 
 // --- Filter Logic ---
 
@@ -135,7 +136,6 @@ async function init() {
     store.set('items', items);
     store.set('loading', false);
 
-    sessionStorage.setItem('sg-sale-items', JSON.stringify(items));
     sessionStorage.setItem('sg-sale-settings', JSON.stringify(settings));
 
     renderHero(document.getElementById('hero'));
@@ -149,7 +149,7 @@ async function init() {
     document.getElementById('grid-container').innerHTML = `
       <div class="grid-empty">
         <p>Failed to load items</p>
-        <p class="grid-empty-sub">${err.message}</p>
+        <p class="grid-empty-sub">${esc(err.message)}</p>
       </div>
     `;
   }

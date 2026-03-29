@@ -2,6 +2,7 @@ import { store } from './store.js';
 import { CATEGORIES, SORT_OPTIONS } from './config.js';
 import { createGallery } from './gallery.js';
 import { initCountdown } from './countdown.js';
+import { esc } from './utils.js';
 
 // --- SVG Icons ---
 
@@ -170,18 +171,18 @@ export function renderItemCard(item) {
   card.innerHTML = `
     <div class="card-img-wrap">
       ${photoUrl
-        ? `<img src="${photoUrl}" alt="${item.name}" class="card-img" loading="lazy" decoding="async">`
+        ? `<img src="${esc(photoUrl)}" alt="${esc(item.name)}" class="card-img" loading="lazy" decoding="async">`
         : `<div class="card-img-placeholder">No Photo</div>`
       }
       ${isSold ? '<div class="card-status-overlay sold-overlay"><span>SOLD</span></div>' : ''}
       ${isReserved ? '<div class="card-status-overlay reserved-overlay"><span>RESERVED</span></div>' : ''}
-      ${isFlash && !isSold ? `<div class="card-flash-badge">${ICONS.flash} -${settings.flash_sale_discount}%</div>` : ''}
+      ${isFlash && !isSold ? `<div class="card-flash-badge">${ICONS.flash} -${esc(settings.flash_sale_discount)}%</div>` : ''}
       ${item.photo_urls && item.photo_urls.length > 1 ? `<div class="card-photo-count">${item.photo_urls.length} photos</div>` : ''}
     </div>
     <div class="card-body">
-      <span class="card-category">${item.category}</span>
-      <h3 class="card-title">${item.name}</h3>
-      ${item.brand ? `<p class="card-brand">${item.brand}</p>` : ''}
+      <span class="card-category">${esc(item.category)}</span>
+      <h3 class="card-title">${esc(item.name)}</h3>
+      ${item.brand ? `<p class="card-brand">${esc(item.brand)}</p>` : ''}
       <div class="card-price">
         ${item.original_price ? `<span class="price-original">${formatPrice(item.original_price)}</span>` : ''}
         ${isFlash && item.price !== effectivePrice ? `<span class="price-sale">${formatPrice(item.price)}</span>` : ''}
@@ -190,7 +191,7 @@ export function renderItemCard(item) {
       </div>
       ${item.open_to_offers ? '<span class="badge-offer">Open to offers</span>' : ''}
       <div class="card-meta">
-        <span class="badge-condition badge-${item.condition?.toLowerCase().replace(/\s/g, '-') || 'good'}">${item.condition || 'Good'}</span>
+        <span class="badge-condition badge-${esc(item.condition?.toLowerCase().replace(/\s/g, '-') || 'good')}">${esc(item.condition || 'Good')}</span>
       </div>
     </div>
   `;
@@ -233,16 +234,16 @@ export function renderItemGrid(containerEl) {
 
   for (const [category, categoryItems] of grouped) {
     if (!isSingleCategory) {
-      html += `<div class="category-section-header"><h2 class="category-heading">${category}</h2><span class="category-item-count">${categoryItems.length}</span></div>`;
+      html += `<div class="category-section-header"><h2 class="category-heading">${esc(category)}</h2><span class="category-item-count">${categoryItems.length}</span></div>`;
     }
-    html += `<div class="item-grid" data-category="${category}"></div>`;
+    html += `<div class="item-grid" data-category="${esc(category)}"></div>`;
   }
 
   containerEl.innerHTML = html;
 
   // Append cards into each grid
   for (const [category, categoryItems] of grouped) {
-    const grid = containerEl.querySelector(`.item-grid[data-category="${category}"]`);
+    const grid = containerEl.querySelector(`.item-grid[data-category="${CSS.escape(category)}"]`);
     for (const item of categoryItems) {
       grid.appendChild(renderItemCard(item));
     }
@@ -280,9 +281,9 @@ export function renderItemModal(item) {
       <button class="modal-close" aria-label="Close">${ICONS.close}</button>
       <div class="modal-gallery" id="modal-gallery"></div>
       <div class="modal-content">
-        <span class="card-category">${item.category}</span>
-        <h2 class="modal-title">${item.name}</h2>
-        ${item.brand ? `<p class="modal-brand">${item.brand}</p>` : ''}
+        <span class="card-category">${esc(item.category)}</span>
+        <h2 class="modal-title">${esc(item.name)}</h2>
+        ${item.brand ? `<p class="modal-brand">${esc(item.brand)}</p>` : ''}
 
         ${isSold ? '<div class="modal-sold-badge">SOLD</div>' : ''}
         ${item.status === 'reserved' ? '<div class="modal-reserved-badge">RESERVED</div>' : ''}
@@ -296,15 +297,15 @@ export function renderItemModal(item) {
 
         ${item.open_to_offers ? '<div class="modal-offer-badge">Open to offers</div>' : ''}
 
-        ${item.description ? `<div class="modal-section"><h4>Description</h4><p>${item.description}</p></div>` : ''}
-        ${item.dimensions ? `<div class="modal-section"><h4>Dimensions</h4><p>${item.dimensions}</p></div>` : ''}
+        ${item.description ? `<div class="modal-section"><h4>Description</h4><p>${esc(item.description)}</p></div>` : ''}
+        ${item.dimensions ? `<div class="modal-section"><h4>Dimensions</h4><p>${esc(item.dimensions)}</p></div>` : ''}
 
         <div class="modal-details">
-          <div class="detail-row"><span class="detail-label">Condition</span><span class="badge-condition badge-${item.condition?.toLowerCase().replace(/\s/g, '-') || 'good'}">${item.condition || 'Good'}</span></div>
-          <div class="detail-row"><span class="detail-label">Status</span><span class="status-badge status-${item.status}">${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</span></div>
+          <div class="detail-row"><span class="detail-label">Condition</span><span class="badge-condition badge-${esc(item.condition?.toLowerCase().replace(/\s/g, '-') || 'good')}">${esc(item.condition || 'Good')}</span></div>
+          <div class="detail-row"><span class="detail-label">Status</span><span class="status-badge status-${esc(item.status)}">${esc(item.status.charAt(0).toUpperCase() + item.status.slice(1))}</span></div>
         </div>
 
-        ${item.original_item_url ? `<a href="${item.original_item_url}" target="_blank" rel="noopener" class="original-link">View original listing ${ICONS.externalLink}</a>` : ''}
+        ${item.original_item_url ? `<a href="${esc(item.original_item_url)}" target="_blank" rel="noopener" class="original-link">View original listing ${ICONS.externalLink}</a>` : ''}
 
         ${!isSold ? `
           <a href="${getWhatsAppUrl(item, settings)}" target="_blank" rel="noopener" class="btn-whatsapp">
@@ -369,7 +370,7 @@ export function renderFlashBanner(containerEl) {
   containerEl.innerHTML = `
     <div class="flash-banner">
       ${ICONS.flash}
-      <span>FLASH SALE — EXTRA ${settings.flash_sale_discount}% OFF EVERYTHING</span>
+      <span>FLASH SALE — EXTRA ${esc(settings.flash_sale_discount)}% OFF EVERYTHING</span>
       ${ICONS.flash}
     </div>
   `;
@@ -384,23 +385,23 @@ export function renderHero(containerEl) {
   containerEl.innerHTML = `
     <div class="hero">
       <div class="hero-content">
-        <h1 class="hero-title">${settings.site_title || 'Whole Household Relocation Sale'}</h1>
+        <h1 class="hero-title">${esc(settings.site_title || 'Whole Household Relocation Sale')}</h1>
         <p class="hero-subtitle">Everything must go — furniture, electronics, kitchen, decor & more</p>
         <div class="hero-details">
           <div class="hero-detail">
             <span class="hero-icon">${ICONS.mapPin}</span>
-            <a href="${settings.address_maps_url || '#'}" target="_blank" rel="noopener" class="hero-link">${settings.address || 'Singapore'}</a>
+            <a href="${esc(settings.address_maps_url || '#')}" target="_blank" rel="noopener" class="hero-link">${esc(settings.address || 'Singapore')}</a>
           </div>
           <div class="hero-detail">
             <span class="hero-icon">${ICONS.whatsapp}</span>
-            <a href="https://wa.me/${settings.whatsapp_number || ''}" target="_blank" rel="noopener" class="hero-link">WhatsApp Us</a>
+            <a href="https://wa.me/${esc(settings.whatsapp_number || '')}" target="_blank" rel="noopener" class="hero-link">WhatsApp Us</a>
           </div>
         </div>
         ${settings.sale_start_date && settings.sale_end_date ? `
-          <p class="hero-dates">${settings.sale_start_date} — ${settings.sale_end_date}</p>
+          <p class="hero-dates">${esc(settings.sale_start_date)} — ${esc(settings.sale_end_date)}</p>
         ` : ''}
         <div class="hero-countdown" id="hero-countdown"></div>
-        ${isFlash ? `<div class="hero-flash">${ICONS.flash} EXTRA ${settings.flash_sale_discount}% OFF EVERYTHING ${ICONS.flash}</div>` : ''}
+        ${isFlash ? `<div class="hero-flash">${ICONS.flash} EXTRA ${esc(settings.flash_sale_discount)}% OFF EVERYTHING ${ICONS.flash}</div>` : ''}
         <a href="#items" class="btn-hero" onclick="document.getElementById('main-content').scrollIntoView({behavior:'smooth'}); return false;">Browse Items</a>
       </div>
     </div>

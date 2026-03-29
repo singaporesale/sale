@@ -1,3 +1,5 @@
+import { esc } from './utils.js';
+
 export function createGallery(photoUrls, container) {
   if (!photoUrls || photoUrls.length === 0) {
     container.innerHTML = '<div class="gallery-empty">No photos</div>';
@@ -12,7 +14,7 @@ export function createGallery(photoUrls, container) {
     container.innerHTML = `
       <div class="gallery">
         <div class="gallery-main">
-          <img src="${photoUrls[currentIndex]}" alt="Photo ${currentIndex + 1}" class="gallery-img" loading="eager" decoding="async">
+          <img src="${esc(photoUrls[currentIndex])}" alt="Photo ${currentIndex + 1}" class="gallery-img" loading="eager" decoding="async">
           ${photoUrls.length > 1 ? `
             <button class="gallery-nav gallery-prev" aria-label="Previous photo">${SVG_CHEVRON_LEFT}</button>
             <button class="gallery-nav gallery-next" aria-label="Next photo">${SVG_CHEVRON_RIGHT}</button>
@@ -23,7 +25,7 @@ export function createGallery(photoUrls, container) {
         </div>
         ${photoUrls.length > 1 ? `
           <div class="gallery-thumbs">
-            ${photoUrls.map((url, i) => `<img src="${url}" alt="Thumb ${i + 1}" class="gallery-thumb ${i === currentIndex ? 'active' : ''}" data-index="${i}" loading="lazy" decoding="async">`).join('')}
+            ${photoUrls.map((url, i) => `<img src="${esc(url)}" alt="Thumb ${i + 1}" class="gallery-thumb ${i === currentIndex ? 'active' : ''}" data-index="${i}" loading="lazy" decoding="async">`).join('')}
           </div>
         ` : ''}
       </div>
@@ -105,7 +107,7 @@ function openLightbox(photoUrls, startIndex) {
   overlay.innerHTML = `
     <div class="lightbox-backdrop"></div>
     <button class="lightbox-close" aria-label="Close">${SVG_CLOSE}</button>
-    <img src="${photoUrls[index]}" class="lightbox-img" alt="Full size photo">
+    <img src="${esc(photoUrls[index])}" class="lightbox-img" alt="Full size photo">
     ${photoUrls.length > 1 ? `
       <button class="lightbox-nav lightbox-prev" aria-label="Previous">${SVG_CHEVRON_LEFT}</button>
       <button class="lightbox-nav lightbox-next" aria-label="Next">${SVG_CHEVRON_RIGHT}</button>

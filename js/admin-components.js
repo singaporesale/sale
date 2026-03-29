@@ -1,5 +1,6 @@
 import { uploadPhoto, deletePhoto } from './api.js';
 import { IMAGE_MAX_WIDTH, MAX_PHOTOS_PER_ITEM, SETTINGS_SCHEMA } from './config.js';
+import { esc } from './utils.js';
 
 // --- Alert ---
 
@@ -33,7 +34,7 @@ export function renderItemsList(container, items, handlers) {
     tablesHtml += `
       <div class="admin-category-section">
         <div class="admin-category-header">
-          <h3 class="admin-category-title">${category}</h3>
+          <h3 class="admin-category-title">${esc(category)}</h3>
           <span class="admin-category-count">${catItems.length}</span>
         </div>
         <table class="items-table">
@@ -47,7 +48,7 @@ export function renderItemsList(container, items, handlers) {
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody class="sortable-tbody" data-category="${category}">
+          <tbody class="sortable-tbody" data-category="${esc(category)}">
             ${catItems.map(item => {
               const idx = globalIndex++;
               return `
@@ -55,11 +56,11 @@ export function renderItemsList(container, items, handlers) {
                 <td><span class="drag-handle" title="Drag to reorder">≡</span></td>
                 <td>
                   ${item.photo_urls && item.photo_urls.length > 0
-                    ? `<img src="${item.photo_urls[0]}" alt="" class="table-img">`
+                    ? `<img src="${esc(item.photo_urls[0])}" alt="" class="table-img">`
                     : `<div class="table-img" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--color-gray-light)">—</div>`
                   }
                 </td>
-                <td><span class="table-name">${item.name}</span></td>
+                <td><span class="table-name">${esc(item.name)}</span></td>
                 <td><strong>S$${Number(item.price).toLocaleString()}</strong></td>
                 <td>
                   <select class="table-status-select" data-id="${item.id}">
@@ -85,22 +86,22 @@ export function renderItemsList(container, items, handlers) {
     cardsHtml += `
       <div class="admin-category-section-mobile">
         <div class="admin-category-header">
-          <h3 class="admin-category-title">${category}</h3>
+          <h3 class="admin-category-title">${esc(category)}</h3>
           <span class="admin-category-count">${catItems.length}</span>
         </div>
-        <div class="admin-item-cards-group sortable-cards" data-category="${category}">
+        <div class="admin-item-cards-group sortable-cards" data-category="${esc(category)}">
           ${catItems.map(item => {
             return `
             <div class="admin-item-card" data-id="${item.id}" draggable="true">
               <span class="drag-handle-mobile" title="Drag to reorder">≡</span>
               ${item.photo_urls && item.photo_urls.length > 0
-                ? `<img src="${item.photo_urls[0]}" alt="" class="admin-item-card-img">`
+                ? `<img src="${esc(item.photo_urls[0])}" alt="" class="admin-item-card-img">`
                 : `<div class="admin-item-card-img"></div>`
               }
               <div class="admin-item-card-body">
-                <div class="admin-item-card-name">${item.name}</div>
+                <div class="admin-item-card-name">${esc(item.name)}</div>
                 <div class="admin-item-card-price">S$${Number(item.price).toLocaleString()}</div>
-                <div class="admin-item-card-meta">${item.status}</div>
+                <div class="admin-item-card-meta">${esc(item.status)}</div>
                 <div class="admin-item-card-actions">
                   <button class="btn btn-sm btn-outline btn-edit" data-id="${item.id}">Edit</button>
                   <select class="table-status-select" data-id="${item.id}" style="font-size:12px;padding:4px 6px;">
@@ -311,9 +312,9 @@ export function renderItemForm(container, item, opts) {
         </div>
         <div class="upload-previews" id="photo-previews">
           ${photos.map((url, i) => `
-            <div class="upload-preview ${i === 0 ? 'primary' : ''}" data-url="${url}" data-index="${i}" draggable="true">
-              <img src="${url}" alt="Photo ${i + 1}">
-              <button class="upload-preview-remove" data-url="${url}" type="button">&times;</button>
+            <div class="upload-preview ${i === 0 ? 'primary' : ''}" data-url="${esc(url)}" data-index="${i}" draggable="true">
+              <img src="${esc(url)}" alt="Photo ${i + 1}">
+              <button class="upload-preview-remove" data-url="${esc(url)}" type="button">&times;</button>
             </div>
           `).join('')}
         </div>
@@ -432,9 +433,9 @@ export function renderItemForm(container, item, opts) {
 
   function renderPhotoPreviews() {
     previewsEl.innerHTML = currentPhotos.map((url, i) => `
-      <div class="upload-preview ${i === 0 ? 'primary' : ''}" data-url="${url}" data-index="${i}" draggable="true">
-        <img src="${url}" alt="Photo ${i + 1}">
-        <button class="upload-preview-remove" data-url="${url}" type="button">&times;</button>
+      <div class="upload-preview ${i === 0 ? 'primary' : ''}" data-url="${esc(url)}" data-index="${i}" draggable="true">
+        <img src="${esc(url)}" alt="Photo ${i + 1}">
+        <button class="upload-preview-remove" data-url="${esc(url)}" type="button">&times;</button>
       </div>
     `).join('');
 
@@ -554,16 +555,12 @@ export function renderSettingsForm(container, settings, handlers) {
 
 // --- Helpers ---
 
-function esc(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
 async function resizeImage(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
       const canvas = document.createElement('canvas');
       const scale = Math.min(1, IMAGE_MAX_WIDTH / img.width);
       canvas.width = Math.round(img.width * scale);
@@ -581,8 +578,8 @@ async function resizeImage(file) {
         0.85
       );
     };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(); };
+    img.src = objectUrl;
   });
 }
 
